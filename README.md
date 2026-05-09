@@ -1,6 +1,6 @@
 # Smart Power Plant Monitoring System
 
-A full-stack real-time monitoring dashboard that simulates industrial sensor data for a nuclear generating station, detects operational anomalies using threshold-based logic, and visualizes live plant conditions in a React dashboard. The project is themed around Ontario Power Generation's Darlington Nuclear Generating Station and models the kind of SCADA-adjacent tooling used in real grid operations.
+A full-stack real-time monitoring dashboard that simulates industrial sensor data for a nuclear generating station, detects operational anomalies using threshold-based logic, and visualizes live plant conditions in a React dashboard.
 
 ---
 
@@ -167,15 +167,6 @@ VITE_API_URL=http://localhost:8001
 
 ---
 
-## Resume Talking Points
-
-- Built a full-stack real-time monitoring dashboard using **FastAPI** and **React**, simulating industrial sensor data for a nuclear generating station modeled on Ontario Power Generation's Darlington facility
-- Designed a **Pydantic v2** data model pipeline from sensor simulation through anomaly detection to a typed REST API response
-- Implemented **threshold-based anomaly detection** with two severity tiers across four sensor types, returning structured alert objects consumed directly by the frontend
-- Built a **React dashboard** with live polling, rolling time-series charts (Chart.js), and conditional UI states (normal / attention / high alert / offline) that update every second
-- Applied **CORS configuration**, environment-variable-driven API URLs, and Vite tooling for a production-ready frontend build setup
-
----
 
 ## Future Improvements
 
