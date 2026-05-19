@@ -1,4 +1,6 @@
+// react hooks for state, side effects, and caching computed values
 import { useEffect, useMemo, useState } from "react";
+// icons from lucide-react, one per sensor and for the ui labels
 import {
   Activity,
   AlertTriangle,
@@ -8,6 +10,7 @@ import {
   Waves,
   Zap,
 } from "lucide-react";
+// chart.js requires you to register the features you use before rendering
 import {
   CategoryScale,
   Chart as ChartJS,
@@ -20,8 +23,10 @@ import {
 } from "chart.js";
 import { Line } from "react-chartjs-2";
 
+// getData is the only function from api.js, it calls GET /data on the backend
 import { getData } from "./api";
 
+// registering the chart.js features we imported above so they work in the Line component
 ChartJS.register(
   CategoryScale,
   Filler,
@@ -32,6 +37,7 @@ ChartJS.register(
   Tooltip
 );
 
+// one entry per sensor — drives both the metric cards and the charts so we don't repeat ourselves
 const metricConfig = [
   {
     key: "temperature",
@@ -93,6 +99,7 @@ const chartOptions = {
   },
 };
 
+// converts a unix timestamp (seconds since 1970) into a readable clock time for the chart x-axis
 function formatTime(timestamp) {
   return new Date(timestamp * 1000).toLocaleTimeString([], {
     hour: "2-digit",
@@ -101,8 +108,10 @@ function formatTime(timestamp) {
   });
 }
 
+// renders one sensor card — colored by alert severity if an alert exists for that sensor
 function MetricCard({ metric, reading }) {
   const Icon = metric.icon;
+  // searches the alerts list for one matching this sensor, undefined if nothing triggered
   const alert = reading?.alerts?.find((item) => item.sensor === metric.key);
 
   return (
@@ -122,7 +131,9 @@ function MetricCard({ metric, reading }) {
   );
 }
 
+// renders a 30-point line chart for one sensor using the full readings history
 function MetricChart({ metric, readings }) {
+  // x-axis labels are the timestamp of each reading converted to clock time
   const labels = readings.map((reading) => formatTime(reading.timestamp));
   const data = {
     labels,
@@ -155,16 +166,19 @@ function MetricChart({ metric, readings }) {
 }
 
 function App() {
+  // readings holds the last 30 sensor snapshots, apiError holds any connection error message
   const [readings, setReadings] = useState([]);
   const [apiError, setApiError] = useState("");
 
   useEffect(() => {
+    // mounted flag prevents state updates if the component is removed before the request finishes
     let mounted = true;
 
     async function pullReading() {
       try {
         const reading = await getData();
         if (!mounted) return;
+        // keeps only the last 30 readings — slice(-29) takes the last 29 then adds the new one
         setReadings((current) => [...current.slice(-29), reading]);
         setApiError("");
       } catch (error) {
@@ -174,19 +188,26 @@ function App() {
       }
     }
 
+    // call immediately so the dashboard doesn't sit empty for the first second
     pullReading();
+    // then poll every 1 second after that
     const intervalId = window.setInterval(pullReading, 1000);
 
+    // cleanup: stop the interval when the component is removed from the page
     return () => {
       mounted = false;
       window.clearInterval(intervalId);
     };
   }, []);
 
+  // latest is the most recent reading, used by the metric cards and plant strip
   const latest = readings.at(-1);
+  // if latest is undefined (no readings yet) fall back to empty array so nothing crashes
   const activeAlerts = latest?.alerts ?? [];
+  // high alerts are separated to decide between "attention" and "high alert" status
   const highAlerts = activeAlerts.filter((alert) => alert.severity === "high");
 
+  // priority order: offline beats everything, then connecting, then high alert, then attention, then normal
   const statusLabel = useMemo(() => {
     if (apiError) return "Offline";
     if (!latest) return "Connecting";

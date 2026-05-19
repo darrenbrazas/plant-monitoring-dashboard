@@ -1,5 +1,8 @@
 from models import Alert, SensorReading
 
+#files purpose is to take a reading and return a list of alerts
+
+#different threshold for each reading
 
 THRESHOLDS = {
     "temperature": {"medium": 280.0, "high": 292.0, "unit": "C"},
@@ -8,8 +11,10 @@ THRESHOLDS = {
     "vibration": {"medium": 4.0, "high": 4.7, "unit": "Hz"},
 }
 
-
+#returns the alerts if the current sensor reading is  above the high or medium limits defined in the object above
+# also returns no alerts if the reading lies below both
 def _upper_alert(sensor: str, value: float, medium: float, high: float, unit: str):
+    #checks in priority order, first checks if the reading is greater than the high threshold
     if value >= high:
         return Alert(
             sensor=sensor,
@@ -18,6 +23,7 @@ def _upper_alert(sensor: str, value: float, medium: float, high: float, unit: st
             value=round(value, 2),
             threshold=high,
         )
+    #then checks the medium one
     if value >= medium:
         return Alert(
             sensor=sensor,
@@ -28,14 +34,16 @@ def _upper_alert(sensor: str, value: float, medium: float, high: float, unit: st
         )
     return None
 
-
+#starts with an empty list 
 def detect_anomalies(reading: SensorReading) -> list[Alert]:
     alerts: list[Alert] = []
 
     for sensor in ("temperature", "pressure", "vibration"):
         threshold = THRESHOLDS[sensor]
+        #call the upper alert function with the parameters for each type of upper bounded sensor (3 times)
         alert = _upper_alert(
             sensor,
+            #acceses an attribute using a string name i.e reading.temperature or reading.pressure
             getattr(reading, sensor),
             threshold["medium"],
             threshold["high"],
@@ -44,6 +52,8 @@ def detect_anomalies(reading: SensorReading) -> list[Alert]:
         if alert:
             alerts.append(alert)
 
+    #flow rate is checked separately since it's lower bounded, there is no lower alert function since it's only one sensor that has risk at lower values
+    #should include a lower alert for scalability
     flow = reading.flow_rate
     flow_limits = THRESHOLDS["flow_rate"]
     if flow <= flow_limits["critical_low"]:

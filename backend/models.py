@@ -2,7 +2,7 @@ from pydantic import BaseModel, Field
 
 
 class Alert(BaseModel):
-    sensor: str
+    sensor: str #like temp, flowrate etc
     message: str
     severity: str = Field(pattern="^(low|medium|high)$")
     value: float
